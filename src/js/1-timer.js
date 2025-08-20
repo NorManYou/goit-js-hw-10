@@ -14,14 +14,38 @@ document.addEventListener('DOMContentLoaded', () => {
   btnElem.disabled = true;
 });
 
+const flatpickrInstance = flatpickr('#datetime-picker', {
+  enableTime: true,
+  time_24hr: true,
+  defaultDate: new Date(),
+  minuteIncrement: 1,
+  onClose(selectedDates) {
+    if (selectedDates[0] - new Date() <= 0) {
+      iziToast.show({
+        theme: 'dark',
+        position: 'topRight',
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/1828/1828843.png',
+        message: 'Please choose a date in the future',
+        messageColor: 'white',
+        icon: 'icon-person',
+        color: '#ef4040',
+      });
+      btnElem.disabled = true;
+    } else {
+      timeManager.selectedDates = selectedDates[0].getTime();
+      btnElem.disabled = false;
+    }
+  },
+});
 
 const timeManager = {
   selectedDates: null,
   intervalId: null,
   timer() {
+    inputElem.disabled = true; 
+    btnElem.disabled = true;
+
     this.intervalId = setInterval(() => {
-      btnElem.disabled = true;
-      inputElem.disabled = true;
       if (this.selectedDates - new Date() <= 0) {
         this.stopTimer();
         return;
@@ -34,68 +58,34 @@ const timeManager = {
   },
   stopTimer() {
     clearInterval(this.intervalId);
-    inputElem.disabled = false;
+    inputElem.disabled = false; 
+    btnElem.disabled = true;
   },
 };
 
-btnElem.addEventListener('click', e => {
-    timeManager.timer();
-});
-
-new flatpickr('#datetime-picker', {
-  enableTime: true,
-  time_24hr: true,
-  defaultDate: new Date(),
-  minuteIncrement: 1,
-  onClose(selectedDates) {
-      if (selectedDates[0] - new Date() <= 0) {
-          iziToast.show({
-              theme: 'dark',
-              position: 'topRight',
-              iconUrl: 'https://cdn-icons-png.flaticon.com/512/1828/1828843.png',
-        message: 'Please choose a date in the future',
-        messageColor: 'white',
-        icon: 'icon-person',
-        color: '#ef4040',
-      });
-      btnElem.disabled = true;
-    } else {
-      console.log(selectedDates[0]);
-      timeManager.selectedDates = selectedDates[0].getTime();
-      btnElem.disabled = false;
-    }
-  },
+btnElem.addEventListener('click', () => {
+  timeManager.timer();
 });
 
 function convertMs(ms) {
-  // Number of milliseconds per unit of time
   const second = 1000;
   const minute = second * 60;
   const hour = minute * 60;
   const day = hour * 24;
-  // Remaining days
+
   const days = Math.floor(ms / day);
-  // Remaining hours
   const hours = Math.floor((ms % day) / hour);
-  // Remaining minutes
   const minutes = Math.floor(((ms % day) % hour) / minute);
-  // Remaining seconds
   const seconds = Math.floor((((ms % day) % hour) % minute) / second);
 
   return { days, hours, minutes, seconds };
 }
+
 function changeText({ days, hours, minutes, seconds }) {
-  const daysStr = pad(days);
-  const hoursStr = pad(hours);
-  const minutesStr = pad(minutes);
-  const secondStr = pad(seconds);
-
-  daysElem.textContent = daysStr;
-  hoursElem.textContent = hoursStr;
-  minutesElem.textContent = minutesStr;
-  secondElem.textContent = secondStr;
-
-  return;
+  daysElem.textContent = pad(days);
+  hoursElem.textContent = pad(hours);
+  minutesElem.textContent = pad(minutes);
+  secondElem.textContent = pad(seconds);
 }
 
 function pad(value) {
